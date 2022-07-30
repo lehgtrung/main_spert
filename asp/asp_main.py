@@ -179,7 +179,7 @@ def curriculum_training(labeled_path,
     # Step 1: Train on labeled data
     script = TRAIN_SCRIPT.format(train_path=labeled_path)
     print('Train on labeled data')
-    #subprocess.run(script, shell=True, check=True)
+    subprocess.run(script, shell=True, check=True)
 
     iteration = 1
     while True:
@@ -195,6 +195,7 @@ def curriculum_training(labeled_path,
                               output_path=selected_pseudo_labeled_path)
 
         # Step 3.5 Unify labeled and selected pseudo labels
+        print('Round #{}: Unify labels and pseudo labels'.format(iteration))
         unify_two_datasets(first_path=selected_pseudo_labeled_path,
                            second_path=labeled_path,
                            output_path=unified_pseudo_labeled_path)
