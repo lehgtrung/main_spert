@@ -178,7 +178,7 @@ def curriculum_training(labeled_path,
     # Step 1: Train on labeled data
     script = TRAIN_SCRIPT.format(train_path=labeled_path)
     print('Train on labeled data')
-    subprocess.run(script, shell=True, check=True)
+    #subprocess.run(script, shell=True, check=True)
 
     iteration = 1
     while True:

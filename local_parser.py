@@ -22,6 +22,10 @@ def local_parse(parser):
     parser.add_argument('--dataset_path',
                         default=None, type=none_or_str,
                         action='store', )
+
+    parser.add_argument('--predictions_path',
+                        default=None, type=none_or_str,
+                        action='store', )
     return parser
 
 
