@@ -111,7 +111,7 @@ def verify_and_infer_file(input_path, output_path):
 
         final_outputs = verify_and_infer(entities, relations, inference_program)
         united_atoms = answer_sets_intersection(final_outputs)
-        if len(united_atoms):
+        if len(united_atoms) == 0:
             print('Atoms: ', atoms)
             print('united_atoms: ', united_atoms)
 
