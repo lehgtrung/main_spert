@@ -6,18 +6,18 @@ import glob, os
 
 def conll04_script():
     train_script = """
-        python -u ../main.py \
+        python -u ./main.py \
         --mode train \
         --train_path {train_path}
         """
     predict_script = """
-            python -u ../main.py \
+            python -u ./main.py \
             --mode predict \
             --dataset_path {dataset_path} \
             --predictions_path {predictions_path}
             """
     eval_script = """
-            python -u ../main.py \
+            python -u ./main.py \
             --mode eval \
             --dataset_path {dataset_path}
     """
