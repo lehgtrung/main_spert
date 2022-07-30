@@ -93,7 +93,7 @@ def verify_and_infer(entities, relations, inference_program):
 def verify_and_infer_file(input_path, output_path):
     with open(input_path, 'r') as f:
         input_data = json.load(f)
-    with open('inference.lp') as f:
+    with open('./inference.lp') as f:
         inference_program = f.read()
     data_points = []
     for i, row in tqdm(enumerate(input_data), total=len(input_data)):
