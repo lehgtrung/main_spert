@@ -111,8 +111,9 @@ def verify_and_infer_file(input_path, output_path):
 
         final_outputs = verify_and_infer(entities, relations, inference_program)
         united_atoms = answer_sets_intersection(final_outputs)
-        if not united_atoms:
-            print('Empty selection: ', atoms)
+        if len(united_atoms):
+            print('Atoms: ', atoms)
+            print('united_atoms: ', united_atoms)
 
         data_point = convert_solution_to_data(tokens, united_atoms)
         data_point = {
