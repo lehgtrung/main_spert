@@ -144,7 +144,7 @@ def spert_to_twoone(entities, relations, dtype):
                  entities[relation['head']][1],
                  entities[relation['tail']][0],
                  entities[relation['tail']][1],
-                 relations['type']]
+                 relation['type']]
             )
         return new_relations
 
