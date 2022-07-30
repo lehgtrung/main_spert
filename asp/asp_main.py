@@ -98,8 +98,8 @@ def verify_and_infer_file(input_path, output_path):
     data_points = []
     for i, row in tqdm(enumerate(input_data), total=len(input_data)):
         tokens = row['tokens']
-        entities = row['entity']
-        relations = row['relation']
+        entities = row['entities']
+        relations = row['relations']
 
         # Convert spert format to twoone format
         entities = spert_to_twoone(entities, relations, 'entity')
