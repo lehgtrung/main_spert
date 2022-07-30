@@ -141,7 +141,7 @@ def answer_sets_intersection(answer_sets):
     inter = set(answer_sets[0])
     for answer_set in answer_sets:
         inter = inter.intersection(answer_set)
-    return inter
+    return list(inter)
 
 
 def check_coverage(iteration):
