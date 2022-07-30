@@ -140,10 +140,10 @@ def spert_to_twoone(entities, relations, dtype):
         new_relations = []
         for relation in relations:
             new_relations.append(
-                [entities[relation['head']]['start'],
-                 entities[relation['head']]['end'],
-                 entities[relation['tail']]['start'],
-                 entities[relation['tail']]['end'],
+                [entities[relation['head']][0],
+                 entities[relation['head']][1],
+                 entities[relation['tail']][0],
+                 entities[relation['tail']][1],
                  relations['type']]
             )
         return new_relations
