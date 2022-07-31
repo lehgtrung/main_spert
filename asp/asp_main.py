@@ -108,7 +108,7 @@ def verify_and_infer_file(input_path, output_path):
             continue
 
         final_outputs = verify_and_infer(entities, relations, inference_program)
-        united_atoms = answer_sets_intersection(final_outputs)
+        united_atoms = answer_sets_randomly_selection(final_outputs)
 
         data_point = convert_solution_to_data(tokens, united_atoms)
         data_point = {
@@ -174,19 +174,19 @@ def curriculum_training(labeled_path,
     # Step 1: Train on labeled data
     script = TRAIN_SCRIPT.format(train_path=labeled_path)
     print('Train on labeled data')
-    # subprocess.run(script, shell=True, check=True)
+    subprocess.run(script, shell=True, check=True)
 
     iteration = 1
     while True:
         # Step 0: Copy new model
         print('Round #{}: Copy new model'.format(iteration))
-        # subprocess.run(COPY_NEW_MODEL, shell=True, check=True)
+        subprocess.run(COPY_NEW_MODEL, shell=True, check=True)
 
         # Step 2: Predict on unlabeled data
         script = PREDICT_SCRIPT.format(dataset_path=unlabeled_path,
                                        predictions_path=raw_pseudo_labeled_path)
         print('Round #{}: Predict on unlabeled data'.format(iteration))
-        # subprocess.run(script, shell=True, check=True)
+        subprocess.run(script, shell=True, check=True)
 
         # Step 3: For each sentence, verify and infer => list of answer sets (ASs)
         print('Round #{}: Verify, Infer and Select on pseudo-labeled data'.format(iteration))
