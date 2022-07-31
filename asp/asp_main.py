@@ -108,7 +108,7 @@ def verify_and_infer_file(input_path, output_path):
             continue
 
         final_outputs = verify_and_infer(entities, relations, inference_program)
-        united_atoms = answer_sets_randomly_selection(final_outputs)
+        united_atoms = answer_sets_intersection(final_outputs)
 
         data_point = convert_solution_to_data(tokens, united_atoms)
         data_point = {
