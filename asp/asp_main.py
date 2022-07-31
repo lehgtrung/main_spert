@@ -71,12 +71,12 @@ def convert_solutions_back(solution):
     return es, rs
 
 
-def verify_and_infer(entities, relations, inference_program):
+def verify_and_infer(index, entities, relations, inference_program):
     final_outputs = []
     # Remove connected components
     es = convert_original_to_atoms(entities, 'entity')
     rs = convert_original_to_atoms(relations, 'relation')
-    program = concat_facts(es, rs)
+    program = '%' + str(index) + '\n' + concat_facts(es, rs)
     answer_sets = solve_v2(program)
     for answer_set in answer_sets:
         es, rs = convert_solutions_back(answer_set)
@@ -109,7 +109,7 @@ def verify_and_infer_file(input_path, output_path):
         r_atoms = convert_original_to_atoms(relations, 'relation')
         atoms = e_atoms + r_atoms
 
-        final_outputs = verify_and_infer(entities, relations, inference_program)
+        final_outputs = verify_and_infer(i, entities, relations, inference_program)
         united_atoms = answer_sets_intersection(final_outputs)
         if len(united_atoms) == 0:
             print('Atoms: ', atoms)
