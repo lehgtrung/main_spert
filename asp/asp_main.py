@@ -71,12 +71,15 @@ def convert_solutions_back(solution):
     return es, rs
 
 
-def verify_and_infer(index, entities, relations, inference_program):
+def verify_and_infer(entities, relations, inference_program):
     final_outputs = []
-    # Remove connected components
+    # Convert spert format to twoone format
+    entities = spert_to_twoone(entities, relations, 'entity')
+    relations = spert_to_twoone(entities, relations, 'relation')
+
     es = convert_original_to_atoms(entities, 'entity')
     rs = convert_original_to_atoms(relations, 'relation')
-    program = '%' + str(index) + '\n' + concat_facts(es, rs)
+    program = concat_facts(es, rs)
     answer_sets = solve_v2(program)
     for answer_set in answer_sets:
         es, rs = convert_solutions_back(answer_set)
@@ -101,27 +104,18 @@ def verify_and_infer_file(input_path, output_path):
         entities = row['entities']
         relations = row['relations']
 
-        # Convert spert format to twoone format
-        entities = spert_to_twoone(entities, relations, 'entity')
-        relations = spert_to_twoone(entities, relations, 'relation')
+        if i in [577]:
+            continue
 
-        e_atoms = convert_original_to_atoms(entities, 'entity')
-        r_atoms = convert_original_to_atoms(relations, 'relation')
-        atoms = e_atoms + r_atoms
-
-        final_outputs = verify_and_infer(i, entities, relations, inference_program)
+        final_outputs = verify_and_infer(entities, relations, inference_program)
         united_atoms = answer_sets_intersection(final_outputs)
-        if len(united_atoms) == 0:
-            print('Atoms: ', atoms)
-            print('united_atoms: ', united_atoms)
 
         data_point = convert_solution_to_data(tokens, united_atoms)
         data_point = {
             'tokens': data_point['tokens'],
             'entities': twoone_to_spert(data_point['entities'], data_point['relations'], 'entity'),
             'relations': twoone_to_spert(data_point['entities'], data_point['relations'], 'relation'),
-            'id': i,
-            'atoms': atoms
+            'id': i
         }
         data_points.append(data_point)
     with open(output_path, 'w') as f:
@@ -175,14 +169,19 @@ def curriculum_training(labeled_path,
     SCRIPT = conll04_script()
     TRAIN_SCRIPT = SCRIPT['train']
     PREDICT_SCRIPT = SCRIPT['predict']
+    COPY_NEW_MODEL = 'python cop_model.py'
 
     # Step 1: Train on labeled data
     script = TRAIN_SCRIPT.format(train_path=labeled_path)
     print('Train on labeled data')
-    # subprocess.run(script, shell=True, check=True)
+    subprocess.run(script, shell=True, check=True)
 
     iteration = 1
     while True:
+        # Step 0: Copy new model
+        print('Round #{}: Copy new model'.format(iteration))
+        subprocess.run(COPY_NEW_MODEL, shell=True, check=True)
+
         # Step 2: Predict on unlabeled data
         script = PREDICT_SCRIPT.format(dataset_path=unlabeled_path,
                                        predictions_path=raw_pseudo_labeled_path)
@@ -204,6 +203,8 @@ def curriculum_training(labeled_path,
         print('Round #{}: Retrain on selected pseudo labels'.format(iteration))
         script = TRAIN_SCRIPT.format(train_path=unified_pseudo_labeled_path)
         subprocess.run(script, shell=True, check=True)
+
+        exit()
 
         iteration += 1
 
