@@ -169,7 +169,7 @@ def curriculum_training(labeled_path,
     SCRIPT = conll04_script()
     TRAIN_SCRIPT = SCRIPT['train']
     PREDICT_SCRIPT = SCRIPT['predict']
-    COPY_NEW_MODEL = 'python cop_model.py'
+    COPY_NEW_MODEL = 'python copy_model.py'
 
     # Step 1: Train on labeled data
     script = TRAIN_SCRIPT.format(train_path=labeled_path)
