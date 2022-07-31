@@ -165,9 +165,9 @@ def twoone_to_spert(entities, relations, dtype):
         new_relations = []
         for relation in relations:
             for i, h_entity in enumerate(entities):
-                if relation[0] == h_entity['start'] and relation[1] == h_entity['end']:
+                if relation[0] == h_entity[0] and relation[1] == h_entity[1]:
                     for j, t_entity in enumerate(entities):
-                        if relation[2] == t_entity['start'] and relation[3] == t_entity['end']:
+                        if relation[2] == t_entity[0] and relation[3] == t_entity[1]:
                             new_relations.append(
                                 {
                                     'head': i,
