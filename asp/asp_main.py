@@ -71,26 +71,24 @@ def convert_solutions_back(solution):
     return es, rs
 
 
-def verify_and_infer(entities, relations, inference_program):
-    final_outputs = []
-    # Convert spert format to twoone format
+def verify(entities, relations):
+    # Convert to twoone format
     entities = spert_to_twoone(entities, relations, 'entity')
     relations = spert_to_twoone(entities, relations, 'relation')
 
-    es = convert_original_to_atoms(entities, 'entity')
-    rs = convert_original_to_atoms(relations, 'relation')
-    program = concat_facts(es, rs)
+    final_outputs = []
+    # Remove connected components
+    e_atoms = convert_original_to_atoms(entities, 'entity')
+    r_atoms = convert_original_to_atoms(relations, 'relation')
+
+    program = concat_facts(e_atoms, r_atoms)
     answer_sets = solve_v2(program)
+    if len(answer_sets) > 1:
+        print(len(answer_sets))
     for answer_set in answer_sets:
         es, rs = convert_solutions_back(answer_set)
-        program = inference_program + '\n' + concat_facts(es, rs)
-        solution = solve(program)
-        if not solution:
-            continue
-        solution = ['ok(' + atom + ')' for atom in solution]
-        es, rs = convert_solutions_back(solution)
         final_outputs.append(es + rs)
-    return final_outputs
+    return final_outputs, len(answer_sets), e_atoms + r_atoms
 
 
 def verify_and_infer_file(input_path, output_path):
@@ -99,27 +97,60 @@ def verify_and_infer_file(input_path, output_path):
     with open('asp/inference.lp') as f:
         inference_program = f.read()
     data_points = []
+    answer_sets_per_sentences = []
     for i, row in tqdm(enumerate(input_data), total=len(input_data)):
         tokens = row['tokens']
         entities = row['entities']
         relations = row['relations']
 
-        if i in [585]:
+        if i == 577:
             continue
 
-        final_outputs = verify_and_infer(entities, relations, inference_program)
-        united_atoms = answer_sets_intersection(final_outputs)
+        final_outputs, answer_sets_per_sentence, atoms = verify(entities, relations)
+        atoms = remove_wrap(atoms, wrap_type='atom')
+        word_atoms = convert_position_to_word_atoms(tokens, atoms)
+
+        united_atoms, eweights, rweights = unite_atoms(final_outputs, inference_program)
 
         data_point = convert_solution_to_data(tokens, united_atoms)
         data_point = {
             'tokens': data_point['tokens'],
             'entities': twoone_to_spert(data_point['entities'], data_point['relations'], 'entity'),
             'relations': twoone_to_spert(data_point['entities'], data_point['relations'], 'relation'),
-            'id': i
+            'id': i,
+            'atoms': word_atoms,
+            'eweights': eweights,
+            'rweights': rweights
         }
         data_points.append(data_point)
     with open(output_path, 'w') as f:
         json.dump(data_points, f)
+    return answer_sets_per_sentences
+
+
+def unite_atoms(outputs, inference_program):
+    # Select 1 answer set randomly
+    output = answer_sets_randomly_selection(outputs)
+    # Do inference on that answer set
+    program = inference_program + '\n' + '\n'.join(output)
+    solution = solve(program)
+    if len(solution) == 0:
+        return [], [], []
+    # Compute weight
+    eweights = []
+    rweights = []
+    for atom in solution:
+        weight = 0
+        for answer_set in outputs:
+            if atom + '.' in answer_set:
+                weight += 1
+        weight = weight / len(outputs)
+        if match_form(atom) == 'entity':
+            eweights.append(weight)
+        else:
+            rweights.append(weight)
+    assert len(solution) == len(eweights) + len(rweights)
+    return solution, eweights, rweights
 
 
 def answer_sets_randomly_selection(answer_sets):
@@ -139,8 +170,10 @@ def answer_sets_intersection(answer_sets):
     return list(inter)
 
 
-def check_coverage(iteration):
-    if iteration == 2:
+def check_coverage(iteration, answer_sets_per_sentences):
+    if iteration > 2:
+        return True
+    if len([e for e in answer_sets_per_sentences if e > 1]) > 0:
         return True
     return False
 
@@ -190,8 +223,8 @@ def curriculum_training(labeled_path,
 
         # Step 3: For each sentence, verify and infer => list of answer sets (ASs)
         print('Round #{}: Verify, Infer and Select on pseudo-labeled data'.format(iteration))
-        verify_and_infer_file(input_path=raw_pseudo_labeled_path,
-                              output_path=selected_pseudo_labeled_path)
+        answer_sets_per_sentences = verify_and_infer_file(input_path=raw_pseudo_labeled_path,
+                                                          output_path=selected_pseudo_labeled_path)
 
         # Step 3.5 Unify labeled and selected pseudo labels
         print('Round #{}: Unify labels and pseudo labels'.format(iteration))
@@ -204,12 +237,10 @@ def curriculum_training(labeled_path,
         script = TRAIN_SCRIPT.format(train_path=unified_pseudo_labeled_path)
         subprocess.run(script, shell=True, check=True)
 
-        exit()
-
         iteration += 1
 
         # Step 5: return to Step 2 while not converge
-        if check_coverage(iteration):
+        if check_coverage(iteration, answer_sets_per_sentences):
             break
 
 

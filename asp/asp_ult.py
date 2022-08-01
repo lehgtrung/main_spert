@@ -19,7 +19,7 @@ def solve(program):
         solutions = [value['Value'] for value in result['Call'][0]['Witnesses']]
         return union_all_solutions(solutions)
     else:
-        return None
+        return []
 
 
 def solve_v2(program):
@@ -178,7 +178,41 @@ def twoone_to_spert(entities, relations, dtype):
         return new_relations
 
 
+def convert_position_to_word_atoms(tokens, atoms):
+    word_atoms = []
+    for atom in atoms:
+        if match_form(atom) == 'entity':
+            entity_type, word = extract_from_atom(atom, 'entity')
+            start, end = word.split('+')
+            _word = '_'.join(tokens[int(start):int(end)])
+            word_atoms.append(
+                f'{entity_type}("{_word}")'
+            )
+        else:
+            relation_type, head_word, tail_word = extract_from_atom(atom, 'relation')
+            hstart, hend = head_word.split('+')
+            tstart, tend = tail_word.split('+')
+            _head_word = '_'.join(tokens[int(hstart):int(hend)])
+            _tail_word = '_'.join(tokens[int(tstart):int(tend)])
+            word_atoms.append(
+                f'{relation_type}("{_head_word}", "{_tail_word}")'
+            )
+    return word_atoms
 
+
+def remove_wrap(atoms, wrap_type):
+    assert wrap_type in ['atom', 'ok']
+    new_atoms = []
+    for atom in atoms:
+        if wrap_type == 'atom':
+            new_atoms.append(
+                atom.replace('atom(', '')[:-1]
+            )
+        else:
+            new_atoms.append(
+                atom.replace('ok(', '')[:-1]
+            )
+    return new_atoms
 
 
 
